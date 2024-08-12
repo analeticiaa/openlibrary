@@ -267,31 +267,30 @@ def get_title(e):
     return title
 
 
-def get_publication_year(publish_date: str | int | None) -> int | None:
-    """
-    Return the publication year from a book in YYYY format by looking for four
-    consecutive digits not followed by another digit. If no match, return None.
+re_year = re.compile(r'\b(19\d{2}|20\d{2})\b')
 
-    >>> get_publication_year('1999-01')
-    1999
-    >>> get_publication_year('January 1, 1999')
-    1999
-    """
+
+def get_publication_year(publish_date: str | int | None) -> int | None:
     if publish_date is None:
         return None
-    match = re_year.search(str(publish_date))
-    return int(match.group(0)) if match else None
 
+    publish_date_str = str(publish_date)
 
-def published_in_future_year(publish_year: int) -> bool:
-    """
-    Return True if a book is published in a future year as compared to the
-    current year.
+    if not publish_date_str.isdigit():
+        return None
 
-    Some import sources have publication dates in a future year, and the
-    likelihood is high that this is bad data. So we don't want to import these.
-    """
-    return publish_year > datetime.datetime.now().year
+    if len(publish_date_str) != 4:
+        return None
+    
+    match = re_year.search(publish_date_str)
+    if match:
+        year = int(match.group(0))
+        current_year = datetime.now().year
+
+        if 1900 <= year <= current_year:
+            return year
+    
+    return None
 
 
 def publication_too_old_and_not_exempt(rec: dict) -> bool:
